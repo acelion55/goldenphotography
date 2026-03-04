@@ -70,12 +70,10 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
   const handleImageHover = (index: number) => {
     setHoveredIndex(index);
 
-    // Clear existing timer
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
 
-    // Set new timer to reset after 2800ms
     timerRef.current = setTimeout(() => {
       setHoveredIndex(null);
     }, 2800);
@@ -108,33 +106,53 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
           const data = await response.json();
           
           if (data.success) {
-            const img = new Image();
-            img.onload = async () => {
-              try {
-                const docRef = doc(db, 'customImages', imageId);
-                const dataToSave = {
-                  type: data.file.type,
-                  src: data.file.url,
-                  videoSrc: data.file.type === 'video' ? data.file.url : null,
-                  highResSrc: data.file.url,
-                  isCustom: true,
-                  width: img.width,
-                  height: img.height,
-                  updatedAt: new Date().toISOString()
-                };
-                
-                console.log('Saving image to Firestore:', imageId, dataToSave);
-                await setDoc(docRef, dataToSave, { merge: true });
-                console.log('Image saved successfully!');
-                
-                alert('Upload successful! Reloading page...');
-                window.location.reload();
-              } catch (error) {
-                console.error('Firestore error:', error);
-                alert('Firestore error: ' + error);
-              }
-            };
-            img.src = data.file.url;
+            const fileUrl = data.file.url;
+            
+            if (data.file.type === 'video') {
+              const docRef = doc(db, 'customImages', imageId);
+              const dataToSave = {
+                type: 'video',
+                src: fileUrl,
+                videoSrc: fileUrl,
+                highResSrc: fileUrl,
+                isCustom: true,
+                updatedAt: new Date().toISOString()
+              };
+              
+              console.log('Saving video to Firestore:', imageId, dataToSave);
+              await setDoc(docRef, dataToSave, { merge: true });
+              console.log('Video saved successfully!');
+              alert('Upload successful! Reloading page...');
+              window.location.reload();
+            } else {
+              const img = new Image();
+              img.onload = async () => {
+                try {
+                  const docRef = doc(db, 'customImages', imageId);
+                  const dataToSave = {
+                    type: 'image',
+                    src: fileUrl,
+                    videoSrc: null,
+                    highResSrc: fileUrl,
+                    isCustom: true,
+                    width: img.width,
+                    height: img.height,
+                    updatedAt: new Date().toISOString()
+                  };
+                  
+                  console.log('Saving image to Firestore:', imageId, dataToSave);
+                  await setDoc(docRef, dataToSave, { merge: true });
+                  console.log('Image saved successfully!');
+                  
+                  alert('Upload successful! Reloading page...');
+                  window.location.reload();
+                } catch (error) {
+                  console.error('Firestore error:', error);
+                  alert('Firestore error: ' + error);
+                }
+              };
+              img.src = fileUrl;
+            }
           } else {
             alert('Upload failed: ' + data.error);
           }
@@ -192,7 +210,6 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
   };
 
   useEffect(() => {
-    // Cleanup timer on unmount
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -235,7 +252,6 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
             >
             <div className="relative h-full overflow-hidden max-w-full">
               {image.type === "video" ? (
-                // Video element with thumbnail poster
                 <div className="relative h-full w-auto inline-block max-w-full">
                   {image.width && image.height && (
                     <svg
@@ -273,7 +289,6 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
                   </video>
                 </div>
               ) : (
-                // Image element with SVG placeholder
                 <picture
                   className={`inline-block h-full w-auto ${
                     loadedImages.has(index) ? "show" : ""

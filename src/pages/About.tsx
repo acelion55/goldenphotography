@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,6 +18,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAdmin } from "@/contexts/AdminContext";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Pencil } from "lucide-react";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
@@ -31,7 +36,15 @@ const About = () => {
   const [portrait, setPortrait] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ownerName, setOwnerName] = useState("Morgan Blake");
+  const [ownerSubtitle, setOwnerSubtitle] = useState("PRODUCTION & PHOTOGRAPHY");
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editSubtitle, setEditSubtitle] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { isAdmin } = useAdmin();
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -57,10 +70,26 @@ const About = () => {
   };
 
   useEffect(() => {
-    const loadPortrait = async () => {
+    const loadOwnerData = async () => {
       try {
-        // Fetch a professional photographer portrait from Pexels
-        const data = await fetchPexelsPhotos('PERSONAL', 1, 1); // Personal category has artistic portraits
+        const ownerDoc = await getDoc(doc(db, "ownerData", "profile"));
+        if (ownerDoc.exists()) {
+          const data = ownerDoc.data();
+          if (data.name) setOwnerName(data.name);
+          if (data.subtitle) setOwnerSubtitle(data.subtitle);
+          if (data.photoUrl) {
+            setPortrait({
+              src: data.photoUrl,
+              alt: data.name || 'Portrait',
+              width: data.width || 800,
+              height: data.height || 1000,
+            });
+            setLoading(false);
+            return;
+          }
+        }
+        
+        const data = await fetchPexelsPhotos('PERSONAL', 1, 1);
         if (data.photos.length > 0) {
           const photo = data.photos[0];
           setPortrait({
@@ -71,14 +100,86 @@ const About = () => {
           });
         }
       } catch (err) {
-        console.error('Error fetching portrait:', err);
+        console.error('Error loading owner data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPortrait();
+    loadOwnerData();
   }, []);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      const newPortrait = {
+        src: data.url,
+        alt: ownerName,
+        width: 800,
+        height: 1000,
+      };
+
+      setPortrait(newPortrait);
+      await setDoc(doc(db, "ownerData", "profile"), {
+        photoUrl: data.url,
+        name: ownerName,
+        subtitle: ownerSubtitle,
+        width: 800,
+        height: 1000,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      toast({ title: "Photo updated successfully" });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleEditText = () => {
+    setEditName(ownerName);
+    setEditSubtitle(ownerSubtitle);
+    setShowEditDialog(true);
+  };
+
+  const handleSaveText = async () => {
+    try {
+      setOwnerName(editName);
+      setOwnerSubtitle(editSubtitle);
+      
+      await setDoc(doc(db, "ownerData", "profile"), {
+        name: editName,
+        subtitle: editSubtitle,
+        photoUrl: portrait?.src,
+        width: portrait?.width || 800,
+        height: portrait?.height || 1000,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      setShowEditDialog(false);
+      toast({ title: "Text updated successfully" });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({ title: "Save failed", variant: "destructive" });
+    }
+  };
 
   return (
     <>
@@ -95,18 +196,27 @@ const About = () => {
       <main className="min-h-screen">
         <section className="max-w-[1600px] mx-auto pt-20 pb-12 md:pt-24 md:pb-16">
           <div className="text-center space-y-8 mb-16 px-3 md:px-5 max-w-2xl mx-auto">
-            <div className="space-y-4">
+            <div className="space-y-4 relative">
               <h1 className="font-playfair text-4xl md:text-5xl text-foreground">
-                Morgan Blake
+                {ownerName}
               </h1>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-inter">
-                PRODUCTION & PHOTOGRAPHY
+                {ownerSubtitle}
               </p>
+              {isAdmin && (
+                <button
+                  onClick={handleEditText}
+                  className="absolute top-0 right-0 p-2 bg-black/80 text-white rounded-full hover:bg-black transition-colors"
+                  title="Edit text"
+                >
+                  ✏️
+                </button>
+              )}
             </div>
 
             {/* Portrait */}
             {!loading && portrait && (
-              <div className="max-w-xs mx-auto border border-foreground/10 overflow-hidden">
+              <div className="max-w-xs mx-auto border border-foreground/10 overflow-hidden relative group">
                 <picture className="relative block">
                   {portrait.width && portrait.height && (
                     <svg
@@ -132,9 +242,57 @@ const About = () => {
                     }}
                   />
                 </picture>
+                {isAdmin && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="absolute top-2 right-2 p-2 bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black"
+                      title="Change photo"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
+
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Owner Details</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Owner name"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Subtitle</label>
+                  <Input
+                    value={editSubtitle}
+                    onChange={(e) => setEditSubtitle(e.target.value)}
+                    placeholder="Subtitle text"
+                  />
+                </div>
+                <Button onClick={handleSaveText} className="w-full">
+                  Save Changes
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Bio Section */}
           <div className="max-w-2xl mx-auto px-3 md:px-5 space-y-8 text-center text-foreground/80 text-sm leading-relaxed mb-16">

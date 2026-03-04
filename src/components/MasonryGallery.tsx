@@ -26,9 +26,10 @@ interface GalleryItem {
 interface MasonryGalleryProps {
   images: GalleryItem[];
   onImageClick: (index: number) => void;
+  category?: string;
 }
 
-const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
+const MasonryGallery = ({ images, onImageClick, category = 'GALLERY' }: MasonryGalleryProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [displayImages, setDisplayImages] = useState<GalleryItem[]>(images);
@@ -37,31 +38,26 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
 
   useEffect(() => {
     const loadCustomImages = async () => {
-      console.log('Loading images from Firestore...');
       const updatedImages = await Promise.all(
         images.map(async (img, idx) => {
-          const imageId = img.id || `img-${idx}`;
+          const imageId = img.id || `${category}-img-${idx}`;
           try {
             const docRef = doc(db, 'customImages', imageId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
               const customData = docSnap.data();
-              console.log('Found custom data for', imageId, customData);
               return { ...img, ...customData, id: imageId };
-            } else {
-              console.log('No custom data for', imageId);
             }
           } catch (error) {
-            console.error('Error loading from Firestore:', error);
+            // Silent error handling
           }
           return { ...img, id: imageId };
         })
       );
-      console.log('Final display images:', updatedImages);
       setDisplayImages(updatedImages);
     };
     loadCustomImages();
-  }, [images]);
+  }, [images, category]);
 
   const handleImageLoad = (index: number) => {
     setLoadedImages((prev) => new Set(prev).add(index));
@@ -86,7 +82,7 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
   const handleEdit = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
     const currentImage = displayImages[index];
-    const imageId = currentImage.id || `img-${index}`;
+    const imageId = currentImage.id || `${category}-img-${index}`;
     
     const input = document.createElement('input');
     input.type = 'file';
@@ -119,9 +115,7 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
                 updatedAt: new Date().toISOString()
               };
               
-              console.log('Saving video to Firestore:', imageId, dataToSave);
               await setDoc(docRef, dataToSave, { merge: true });
-              console.log('Video saved successfully!');
               alert('Upload successful! Reloading page...');
               window.location.reload();
             } else {
@@ -140,14 +134,11 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
                     updatedAt: new Date().toISOString()
                   };
                   
-                  console.log('Saving image to Firestore:', imageId, dataToSave);
                   await setDoc(docRef, dataToSave, { merge: true });
-                  console.log('Image saved successfully!');
                   
                   alert('Upload successful! Reloading page...');
                   window.location.reload();
                 } catch (error) {
-                  console.error('Firestore error:', error);
                   alert('Firestore error: ' + error);
                 }
               };
@@ -167,9 +158,7 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
   const handleEditDetails = async (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
     const currentImage = displayImages[index];
-    const imageId = currentImage.id || `img-${index}`;
-    
-    console.log('Editing image:', imageId, currentImage);
+    const imageId = currentImage.id || `${category}-img-${index}`;
     
     const photographer = prompt('Enter photographer name:', currentImage.photographer || '');
     if (photographer === null) return;
@@ -197,14 +186,11 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
         updatedAt: new Date().toISOString()
       };
       
-      console.log('Saving to Firestore:', imageId, dataToSave);
       await setDoc(docRef, dataToSave, { merge: true });
-      console.log('Saved successfully!');
       
       alert('Details updated! Reloading page...');
       window.location.reload();
     } catch (error) {
-      console.error('Firestore error:', error);
       alert('Firestore error: ' + error);
     }
   };

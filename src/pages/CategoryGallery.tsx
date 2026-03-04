@@ -62,7 +62,6 @@ const CategoryGallery = () => {
         const data = await fetchMixedMedia(categoryUpper, 1, 20);
         setImages(data.items);
       } catch (err) {
-        console.error('Error fetching media:', err);
         setError('Failed to load images. Please try again later.');
       } finally {
         setLoading(false);
@@ -107,7 +106,7 @@ const CategoryGallery = () => {
         )}
 
         {!error && images.length > 0 && (
-          <MasonryGallery images={images} onImageClick={handleImageClick} />
+          <MasonryGallery images={images} onImageClick={handleImageClick} category={categoryUpper} />
         )}
 
         {!loading && !error && images.length === 0 && (

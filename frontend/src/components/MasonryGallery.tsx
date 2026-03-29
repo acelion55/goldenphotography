@@ -132,35 +132,30 @@ const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALL
                 isCustom: true,
                 updatedAt: new Date().toISOString()
               };
-              
               await setDoc(docRef, dataToSave, { merge: true });
-              alert('Upload successful! Reloading page...');
-              window.location.reload();
+              setDisplayImages(prev => prev.map((img, i) => i === index ? { ...img, ...dataToSave } : img));
             } else {
-              const img = new Image();
-              img.onload = async () => {
+              const imgEl = new Image();
+              imgEl.onload = async () => {
                 try {
                   const docRef = doc(db, 'customImages', imageId);
                   const dataToSave = {
-                    type: 'image',
+                    type: 'image' as const,
                     src: fileUrl,
                     videoSrc: null,
                     highResSrc: fileUrl,
                     isCustom: true,
-                    width: img.width,
-                    height: img.height,
+                    width: imgEl.width,
+                    height: imgEl.height,
                     updatedAt: new Date().toISOString()
                   };
-                  
                   await setDoc(docRef, dataToSave, { merge: true });
-                  
-                  alert('Upload successful! Reloading page...');
-                  window.location.reload();
+                  setDisplayImages(prev => prev.map((img, i) => i === index ? { ...img, ...dataToSave } : img));
                 } catch (error) {
                   alert('Firestore error: ' + error);
                 }
               };
-              img.src = fileUrl;
+              imgEl.src = fileUrl;
             }
           } else {
             alert('Upload failed: ' + data.error);
@@ -205,9 +200,7 @@ const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALL
       };
       
       await setDoc(docRef, dataToSave, { merge: true });
-      
-      alert('Details updated! Reloading page...');
-      window.location.reload();
+      setDisplayImages(prev => prev.map((img, i) => i === index ? { ...img, ...dataToSave } : img));
     } catch (error) {
       alert('Firestore error: ' + error);
     }

@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600&display=swap');
+
+@layer base {
+  :root {
+    --background: 40 30% 97%;
+    --foreground: 25 30% 15%;
+
+    --card: 40 25% 95%;
+    --card-foreground: 25 30% 15%;
+
+    --popover: 40 30% 97%;
+    --popover-foreground: 25 30% 15%;
+
+    --primary: 35 70% 45%;
+    --primary-foreground: 40 30% 97%;
+
+    --secondary: 40 20% 90%;
+    --secondary-foreground: 25 30% 15%;
+
+    --muted: 40 15% 88%;
+    --muted-foreground: 25 15% 45%;
+
+    --accent: 35 70% 45%;
+    --accent-foreground: 40 30% 97%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 20% 85%;
+    --input: 35 15% 82%;
+    --ring: 35 70% 45%;
+
+    --radius: 0.5rem;
+
+    --golden: 35 70% 45%;
+    --golden-light: 40 60% 75%;
+    --golden-dark: 30 80% 30%;
+    --cream: 40 30% 97%;
+    --warm-brown: 25 30% 25%;
+  }
+
+  .dark {
+    --background: 25 25% 10%;
+    --foreground: 40 30% 85%;
+
+    --card: 25 20% 14%;
+    --card-foreground: 40 30% 85%;
+
+    --popover: 25 20% 14%;
+    --popover-foreground: 40 30% 85%;
+
+    --primary: 35 70% 55%;
+    --primary-foreground: 25 25% 10%;
+
+    --secondary: 25 18% 18%;
+    --secondary-foreground: 40 30% 85%;
+
+    --muted: 25 15% 20%;
+    --muted-foreground: 40 20% 55%;
+
+    --accent: 35 70% 55%;
+    --accent-foreground: 25 25% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 25 15% 22%;
+    --input: 25 12% 25%;
+    --ring: 35 70% 55%;
+
+    --golden: 35 70% 55%;
+    --golden-light: 40 50% 65%;
+    --golden-dark: 30 60% 40%;
+    --cream: 25 25% 10%;
+    --warm-brown: 40 20% 75%;
+  }
+}
+
+@layer utilities {
+  .animate-marquee-rtl {
+    animation: marquee-rtl 40s linear infinite;
+  }
+  
+  .animate-marquee-rtl:hover {
+    animation-play-state: paused;
+  }
+
+  [data-rmiz-modal-overlay] {
+    background-color: hsl(var(--background) / 0.95) !important;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark [data-rmiz-modal-overlay] {
+    background-color: hsl(var(--background) / 0.95) !important;
+  }
+
+  [data-rmiz-modal-img] {
+    border-radius: 0.5rem;
+  }
+
+  /* Rajasthani pattern overlay */
+  .rajasthani-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 25 L25 15Z' fill='none' stroke='%23c8941a' stroke-width='0.5' opacity='0.08'/%3E%3Cpath d='M10 25 L15 35 L10 45 L5 35Z' fill='none' stroke='%23c8941a' stroke-width='0.5' opacity='0.08'/%3E%3Cpath d='M50 25 L55 35 L50 45 L45 35Z' fill='none' stroke='%23c8941a' stroke-width='0.5' opacity='0.08'/%3E%3C/svg%3E");
+  }
+}
+
+@keyframes marquee-rtl {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    @apply bg-background text-foreground font-poppins rajasthani-pattern;
+    overflow-x: hidden;
+    max-width: 100vw;
+    position: relative;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  .skip-to-content {
+    @apply absolute left-0 top-0 z-[100] -translate-y-full bg-foreground text-background px-6 py-3 text-sm uppercase tracking-widest;
+    @apply focus:translate-y-0 transition-transform duration-200;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Hide Google Translate bar */
+.goog-te-banner-frame, #goog-gt-tt {
+  display: none !important;
+}
+body { top: 0 !important; }
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Strip infinite scroll */
+@keyframes strip-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.strip-scroll {
+  animation: strip-scroll 15s linear infinite;
+}
+.strip-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Collage photo shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, hsl(var(--primary)/0.15) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "motion/react";
+import { motion, useInView } from "motion/react";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Pencil } from "lucide-react";
@@ -26,10 +26,27 @@ interface GalleryItem {
 interface MasonryGalleryProps {
   images: GalleryItem[];
   onImageClick: (index: number) => void;
+  onImagesLoaded?: (images: GalleryItem[]) => void;
   category?: string;
 }
 
-const MasonryGallery = ({ images, onImageClick, category = 'GALLERY' }: MasonryGalleryProps) => {
+const ScrollReveal = ({ children, index }: { children: React.ReactNode; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "0px 0px -60px 0px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.75, originX: 0, originY: 1 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.8, delay: (index % 6) * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      style={{ display: "inline-block", verticalAlign: "top" }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALLERY' }: MasonryGalleryProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [displayImages, setDisplayImages] = useState<GalleryItem[]>(images);
@@ -55,6 +72,7 @@ const MasonryGallery = ({ images, onImageClick, category = 'GALLERY' }: MasonryG
         })
       );
       setDisplayImages(updatedImages);
+      if (onImagesLoaded) onImagesLoaded(updatedImages);
     };
     loadCustomImages();
   }, [images, category]);
@@ -207,8 +225,8 @@ const MasonryGallery = ({ images, onImageClick, category = 'GALLERY' }: MasonryG
     <div className="max-w-[1600px] mx-auto md:px-5 pb-16 overflow-hidden">
       <div className="gallery-hover-container text-center">
         {displayImages.map((image, index) => (
+          <ScrollReveal key={index} index={index}>
           <div
-            key={index}
             className="relative inline-block align-top p-[3px] md:p-1 lg:p-1.5 max-w-full"
             style={{ height: "270px" }}
           >
@@ -344,6 +362,7 @@ const MasonryGallery = ({ images, onImageClick, category = 'GALLERY' }: MasonryG
             </div>
             </button>
           </div>
+          </ScrollReveal>
         ))}
       </div>
     </div>

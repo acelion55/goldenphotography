@@ -142,7 +142,11 @@ const PhotographerBio = () => {
   const controls = useAnimation();
 
   useEffect(() => {
-    if (isInView) controls.start('visible');
+    // Delay start to let loading screen exit animation finish
+    const t = setTimeout(() => {
+      if (isInView) controls.start('visible');
+    }, 100);
+    return () => clearTimeout(t);
   }, [isInView, controls]);
 
   useEffect(() => {

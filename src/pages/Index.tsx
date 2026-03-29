@@ -19,6 +19,7 @@ const stripAngles = [-9, 6, -5, 8, -7, 4, -6, 9, -4, 7, -8, 5, -3, 7, -6, 4, -8,
 const Index = () => {
   const { isAdmin } = useAdmin();
   const [stripImages, setStripImages] = useState<string[]>([]);
+  const [lightboxImages, setLightboxImages] = useState<any[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [displayImages, setDisplayImages] = useState<any[]>([]);
@@ -210,7 +211,11 @@ const Index = () => {
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             transition={{ duration: 0.6 }} className="overflow-hidden"
           >
-            <MasonryGallery images={displayImages} onImageClick={handleImageClick} />
+            <MasonryGallery
+              images={displayImages}
+              onImageClick={handleImageClick}
+              onImagesLoaded={(imgs) => setLightboxImages(imgs)}
+            />
           </motion.div>
         )}
 
@@ -231,8 +236,12 @@ const Index = () => {
         )}
       </main>
 
-      {lightboxOpen && displayImages.length > 0 && (
-        <Lightbox images={displayImages} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />
+      {lightboxOpen && (lightboxImages.length > 0 || displayImages.length > 0) && (
+        <Lightbox
+          images={lightboxImages.length > 0 ? lightboxImages : displayImages}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
 
       <PortfolioFooter />

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 
 interface LightboxProps {
   images: { 
-    src: string; 
+    src: string;
+    highResSrc?: string;
     alt: string;
     photographer?: string;
     client?: string;
@@ -152,7 +153,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
       >
         <img
           ref={imageRef}
-          src={currentImage.src}
+          src={currentImage.highResSrc || currentImage.src}
           alt={currentImage.alt}
           className="max-w-full max-h-[85vh] object-contain transition-opacity duration-300 pointer-events-none"
         />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Pencil, Camera, Award, Star, MapPin } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import { db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import {
@@ -140,6 +141,7 @@ const PhotographerBio = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: '-40px' });
   const controls = useAnimation();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Delay start to let loading screen exit animation finish
@@ -192,10 +194,12 @@ const PhotographerBio = () => {
           const docRef = doc(db, 'settings', 'ownerPhoto');
           await setDoc(docRef, { url: data.file.url }, { merge: true });
           setPhoto(data.file.url);
-          alert('Photo updated!');
-        } else alert('Upload failed: ' + data.error);
+          toast({ title: 'Photo updated!' });
+        } else {
+          toast({ title: 'Upload failed', description: data.error, variant: 'destructive' });
+        }
       } catch (err) {
-        alert('Upload failed: ' + err);
+        toast({ title: 'Upload failed', description: String(err), variant: 'destructive' });
       }
     };
     input.click();
@@ -219,9 +223,11 @@ const PhotographerBio = () => {
           setCollageImgs(updated);
           const save: Record<string, string | null> = { img1: updated[0] || null, img2: updated[1] || null, img3: updated[2] || null };
           await setDoc(doc(db, 'settings', 'collage'), save, { merge: true });
-          alert('Collage photo updated!');
+          toast({ title: 'Collage photo updated!' });
         }
-      } catch (err) { alert('Upload failed: ' + err); }
+      } catch (err) {
+        toast({ title: 'Upload failed', description: String(err), variant: 'destructive' });
+      }
     };
     input.click();
   };

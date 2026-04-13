@@ -72,7 +72,7 @@ const StatItem = ({
 };
 
 const statsConfig = [
-  { icon: Camera, target: 10, suffix: '+', label: 'Years Exp.' },
+  { icon: Camera, target: 21, suffix: '+', label: 'Years Exp.' },
   { icon: Award, target: 500, suffix: '+', label: 'Weddings' },
   { icon: Star, target: 1000, suffix: '+', label: 'Happy Clients' },
 ];
@@ -327,14 +327,9 @@ const PhotographerBio = () => {
           ))}
         </motion.div>
 
-        {/* About */}
-        <motion.div custom={3} variants={fadeUp} initial="hidden" animate={controls} className="space-y-1.5">
-          <h2 className="font-playfair text-sm text-foreground">About the Photographer</h2>
-          <p className="text-[11px] text-muted-foreground font-poppins leading-relaxed">
-            With over <span className="text-primary font-medium">10 years of experience</span>, Golden Photography
-            is the most trusted name for weddings, pre-weddings, birthdays &amp; events across
-            Beawar, Ajmer, Jodhpur, Jaipur, Pali and all of Rajasthan.
-          </p>
+        {/* Stats — counting animation */}
+        <motion.div custom={3} variants={fadeUp} initial="hidden" animate={controls}>
+          <p className="font-playfair text-2xl font-bold text-foreground italic tracking-tight">21+ <span className="not-italic font-light text-xl tracking-widest uppercase font-poppins">Years of Experience</span></p>
         </motion.div>
 
         {/* Stats — counting animation */}
@@ -461,7 +456,7 @@ const PhotographerBio = () => {
             animate={isInView ? { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.4 } } : {}}
             className="text-sm text-muted-foreground max-w-xl leading-relaxed font-poppins"
           >
-            With over <span className="text-primary font-medium">10 years of experience</span>, Golden Photography
+            With over <span className="text-primary font-medium">21+ years of experience</span>, Golden Photography
             is the most trusted name for weddings, pre-weddings, birthdays, and events across Rajasthan.
             Every frame is crafted with passion, precision, and the warmth of Rajasthani tradition.
           </motion.p>

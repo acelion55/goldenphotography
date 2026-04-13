@@ -121,8 +121,8 @@ const Index = () => {
   return (
     <>
       <SEO
-        title="Best Wedding Photographer in Beawar Ajmer Jodhpur Jaipur Pali Rajasthan | Golden Photography"
-        description="Golden Photography – Best photographer in Beawar, Ajmer, Jodhpur, Jaipur, Pali, Rajasthan."
+        title="Best Photographer in Beawar | Best Photographer in Ajmer | Golden Photography Rajasthan"
+        description="Golden Photography – Best photographer in Beawar, best photographer in Ajmer, Jodhpur, Jaipur, Pali & Rajasthan. Best wedding photographer & best pre wedding photographer. 21+ years experience. Book now!"
         canonicalUrl="/"
         ogType="website"
         jsonLd={jsonLd}

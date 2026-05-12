@@ -3,6 +3,7 @@ import { motion, useInView } from "motion/react";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Pencil } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
@@ -52,6 +53,7 @@ const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALL
   const [displayImages, setDisplayImages] = useState<GalleryItem[]>(images);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { isAdmin } = useAdmin();
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadCustomImages = async () => {
@@ -75,7 +77,7 @@ const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALL
       if (onImagesLoaded) onImagesLoaded(updatedImages);
     };
     loadCustomImages();
-  }, [images, category]);
+  }, [images, category, onImagesLoaded]);
 
   const handleImageLoad = (index: number) => {
     setLoadedImages((prev) => new Set(prev).add(index));
@@ -132,41 +134,38 @@ const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALL
                 isCustom: true,
                 updatedAt: new Date().toISOString()
               };
-              
               await setDoc(docRef, dataToSave, { merge: true });
-              alert('Upload successful! Reloading page...');
-              window.location.reload();
+              setDisplayImages(prev => prev.map((img, i) => i === index ? { ...img, ...dataToSave } : img));
+              toast({ title: "Upload successful" });
             } else {
-              const img = new Image();
-              img.onload = async () => {
+              const imgEl = new Image();
+              imgEl.onload = async () => {
                 try {
                   const docRef = doc(db, 'customImages', imageId);
                   const dataToSave = {
-                    type: 'image',
+                    type: 'image' as const,
                     src: fileUrl,
                     videoSrc: null,
                     highResSrc: fileUrl,
                     isCustom: true,
-                    width: img.width,
-                    height: img.height,
+                    width: imgEl.width,
+                    height: imgEl.height,
                     updatedAt: new Date().toISOString()
                   };
-                  
                   await setDoc(docRef, dataToSave, { merge: true });
-                  
-                  alert('Upload successful! Reloading page...');
-                  window.location.reload();
+                  setDisplayImages(prev => prev.map((img, i) => i === index ? { ...img, ...dataToSave } : img));
+                  toast({ title: "Upload successful" });
                 } catch (error) {
-                  alert('Firestore error: ' + error);
+                  toast({ title: "Firestore error", description: String(error), variant: "destructive" });
                 }
               };
-              img.src = fileUrl;
+              imgEl.src = fileUrl;
             }
           } else {
-            alert('Upload failed: ' + data.error);
+            toast({ title: "Upload failed", description: data.error, variant: "destructive" });
           }
         } catch (error) {
-          alert('Upload failed: ' + error);
+          toast({ title: "Upload failed", description: String(error), variant: "destructive" });
         }
       }
     };
@@ -205,11 +204,10 @@ const MasonryGallery = ({ images, onImageClick, onImagesLoaded, category = 'GALL
       };
       
       await setDoc(docRef, dataToSave, { merge: true });
-      
-      alert('Details updated! Reloading page...');
-      window.location.reload();
+      setDisplayImages(prev => prev.map((img, i) => i === index ? { ...img, ...dataToSave } : img));
+      toast({ title: "Details updated" });
     } catch (error) {
-      alert('Firestore error: ' + error);
+      toast({ title: "Firestore error", description: String(error), variant: "destructive" });
     }
   };
 
